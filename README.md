@@ -8,7 +8,7 @@ Agent Voice Reply brings seamless, ambient two-way voice feedback to AI coding a
 
 ## Preview
 
-![Agent Voice Reply Workflow Overview](./assets/workflow-overview.png)
+![Agent Voice Reply Workflow Overview](./assets/workflow-overview.gif)
 Two-way ambient voice interaction: instant opening cue when you submit, and a decision-first spoken summary when the task finishes.
 
 ## Features
@@ -91,7 +91,7 @@ The project uses lightweight lifecycle hooks to intercept start/finish checkpoin
 ```text
 agent-voice-reply/
 ├── assets/
-│   └── workflow-overview.png  # Workflow and architectural illustration banner
+│   └── workflow-overview.gif  # Interactive workflow animation banner
 ├── scripts/
 │   ├── antigravity-hook.mjs   # Antigravity lifecycle hook adapter
 │   ├── codex-hook.mjs         # Codex lifecycle hook adapter
