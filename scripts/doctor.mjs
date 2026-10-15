@@ -105,7 +105,7 @@ console.log("\nAgent voice rule");
 for (const [label, file] of [["Codex", join(HOME, ".codex", "AGENTS.md")], ["Claude Code", join(HOME, ".claude", "CLAUDE.md")], ["Antigravity", join(HOME, ".gemini", "config", "GEMINI.md")]]) {
   if (!existsSync(file)) { WARN(`${label}: instruction file missing`, "rerun setup and install the root-only marker rule"); continue; }
   const text = readFileSync(file, "utf8");
-  const rootOnly = /voice-reply result marker v2|Only the root agent|只有[^\n]*主 Agent|语音播报（voice-reply）/.test(text);
+  const rootOnly = /voice-reply result marker|agent-voice-reply rules|Only the root agent|仅限根 Agent|只有[^\n]*主 Agent|语音播报（voice-reply）/.test(text);
   const childSilent = /voice-silent-subagent|中途过程说明|禁止输出语音标记/.test(text);
   rootOnly && childSilent ? PASS(`${label}: root-only voice rule found`) : WARN(`${label}: voice rule is missing or outdated`, "rerun setup and upgrade the marker rule");
 }

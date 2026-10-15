@@ -206,74 +206,79 @@ fi
 add_marker_rule() {
   local file="$1"
   local label="$2"
+  local rule_src="$SKILL_DIR/rules/agent-rules.md"
+  if [ ! -f "$rule_src" ]; then
+    echo "  ERROR: $rule_src not found."
+    return
+  fi
   mkdir -p "$(dirname "$file")"
   touch "$file"
-  local rule_file
-  rule_file="$(mktemp)"
-  cat > "$rule_file" <<'EOF'
-
-## Codex Voice Reply
-
-<!-- voice-reply result marker v2 -->
-Only the root agent that replies directly to the user may end its final reply
-with one hidden spoken-result marker on its own line:
-
-`<!-- voice: status + core info + next step -->`
-
-It MUST be 60 characters or fewer — if longer, rewrite it shorter. Keep it
-ear-friendly and free of code, paths, or secrets.
-When the result needs the user to decide, choose, confirm, or answer, lead with
-what the user must do.
-
-Sub-agents, parallel workers, and reviewers must never emit a voice marker or
-invoke voice playback. Prefix every task dispatched to a sub-agent with
-`[voice-silent-subagent]`; the root agent aggregates their results and speaks
-once at the end.
-<!-- /voice-reply result marker -->
-EOF
-  node - "$file" "$rule_file" <<'NODE'
+  node - "$file" "$rule_src" <<'NODE'
 const fs = require("fs");
 const target = process.argv[2];
-const rule = fs.readFileSync(process.argv[3], "utf8");
+const rule = fs.readFileSync(process.argv[3], "utf8").trim();
 const source = fs.readFileSync(target, "utf8");
-const marker = /<!-- voice-reply result marker(?: v\d+)? -->/;
-const found = marker.exec(source);
-let next;
-if (!found) {
-  next = source.replace(/\s*$/, "") + rule + "\n";
-} else {
-  const heading = source.lastIndexOf("## Codex Voice Reply", found.index);
-  const start = heading >= 0 ? heading : found.index;
-  const explicitEnd = source.indexOf("<!-- /voice-reply result marker -->", found.index);
-  let end;
-  if (explicitEnd >= 0) end = explicitEnd + "<!-- /voice-reply result marker -->".length;
-  else {
-    const nextHeading = source.indexOf("\n## ", found.index + found[0].length);
-    end = nextHeading >= 0 ? nextHeading : source.length;
+
+const startPatterns = [
+  /<!-- (?:voice-reply result marker|agent-voice-reply rules)(?: v\d+)? -->/,
+  /# Antigravity Global Collaboration Rules/,
+  /## (?:Codex Voice Reply|Agent Voice Reply & Collaboration Rules)/
+];
+
+let startIndex = -1;
+let matchedLen = 0;
+for (const p of startPatterns) {
+  const m = p.exec(source);
+  if (m && (startIndex === -1 || m.index < startIndex)) {
+    startIndex = m.index;
+    matchedLen = m[0].length;
   }
-  next = source.slice(0, start).replace(/\s*$/, "") + rule + source.slice(end).replace(/^\s*/, "\n");
 }
+
+let next;
+if (startIndex === -1) {
+  next = (source.trim() ? source.trim() + "\n\n" : "") + rule + "\n";
+} else {
+  const endPattern = /<!-- \/(?:voice-reply result marker|agent-voice-reply rules) -->/;
+  const endMatch = endPattern.exec(source.slice(startIndex));
+  let endIndex;
+  if (endMatch) {
+    endIndex = startIndex + endMatch.index + endMatch[0].length;
+  } else {
+    const afterStart = source.slice(startIndex + matchedLen);
+    const nextH = /\n#{1,2} [^\n]+/.exec(afterStart);
+    if (nextH) {
+      endIndex = startIndex + matchedLen + nextH.index;
+    } else {
+      endIndex = source.length;
+    }
+  }
+  const prefix = source.slice(0, startIndex).replace(/\s*$/, "");
+  const suffix = source.slice(endIndex).replace(/^\s*/, "");
+  next = (prefix ? prefix + "\n\n" : "") + rule + (suffix ? "\n\n" + suffix : "\n");
+}
+
 if (next !== source) {
   fs.copyFileSync(target, `${target}.bak`);
-  fs.writeFileSync(target, next.replace(/\s*$/, "") + "\n");
+  fs.writeFileSync(target, next);
   console.log("updated");
 } else console.log("unchanged");
 NODE
-  rm -f "$rule_file"
   echo "  $label rule installed/upgraded"
 }
 
 echo
 if [ -t 0 ]; then
-  read -r -p "Add the result-marker rule to Claude Code and Codex instructions? [y/N] " rans
+  read -r -p "Add/upgrade collaboration & voice rules in Antigravity, Codex, and Claude Code? [y/N] " rans
 else
   rans="${VOICE_REPLY_AGENT_RULES:-n}"
 fi
 if [[ "$rans" =~ ^[Yy]$ ]]; then
+  add_marker_rule "$HOME/.gemini/config/GEMINI.md" "Antigravity"
   add_marker_rule "$HOME/.claude/CLAUDE.md" "Claude Code"
   add_marker_rule "$HOME/.codex/AGENTS.md" "Codex"
 else
-  echo "  Skipped. Rerun the installer later to add the result-marker rule."
+  echo "  Skipped. Rerun the installer later to add the collaboration rules."
 fi
 
 # 7) Self-check + audible confirmation ----------------------------------------

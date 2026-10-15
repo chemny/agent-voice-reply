@@ -21,6 +21,7 @@ Agent Voice Reply 是一款专为 AI 编码助手打造的双向语音反馈工�
 | 自动中英文适配 | 自动识别每条消息与回复的语言，或按配置锁定特定中/英文音色。 |
 | 子 Agent 静音隔离 | 严格识别主交互与子任务，多 Agent 并行或内部工具调用时保持绝对静默。 |
 | 多端专属人设音色 | 耳听即辨别：Codex 默认女声，Antigravity 与 Claude Code 默认男声，支持在 `~/.voice-reply/config.json` 灵活定制。 |
+| 协同规范一键同步 | 统一内置多端规约（语音播报、Git 安全防手滑、禁止自问自答结论先行），自动注入各端全局规则。 |
 
 ## 安装
 
@@ -102,6 +103,8 @@ agent-voice-reply/
 │   ├── manage-hooks.mjs       # 三端 Hook 幂等注册与管理
 │   └── doctor.mjs             # 全链路环境与发声诊断脚本
 ├── adapters/                  # OpenClaw 与 Hermes 实验性适配器
+├── rules/                     # 统一协同与安全规约模板
+│   └── agent-rules.md
 ├── SKILL.md                   # Agent Skill 规范定义文件
 ├── setup.sh                   # 一键初始化配置脚本
 ├── test.sh                    # 自动化回归测试套件

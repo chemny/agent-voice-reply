@@ -195,6 +195,12 @@ out=$(printf '{"transcriptPath":"%s"}' "$AG_TMP" | VOICE_REPLY_DRY_RUN=1 node "$
 echo "$out" | grep -q '^{}$' && ok "antigravity Stop returns valid JSON" || bad "antigravity Stop returns valid JSON"
 rm -f "$AG_TMP"
 
+echo "13. Collaboration rules template and distribution"
+[ -f "$SKILL_DIR/rules/agent-rules.md" ] && ok "rules/agent-rules.md exists" || bad "rules/agent-rules.md exists"
+grep -q "语音播报规范" "$SKILL_DIR/rules/agent-rules.md" && ok "voice reply rule present" || bad "voice reply rule present"
+grep -q "Git 安全规范" "$SKILL_DIR/rules/agent-rules.md" && ok "git safety rule present" || bad "git safety rule present"
+grep -q "沟通与推演风格" "$SKILL_DIR/rules/agent-rules.md" && ok "communication style rule present" || bad "communication style rule present"
+
 echo
 [ "$fail" = "0" ] && echo "ALL PASS" || echo "SOME FAILED"
 exit "$fail"

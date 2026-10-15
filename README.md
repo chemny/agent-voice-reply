@@ -21,6 +21,7 @@ Two-way ambient voice interaction: instant opening cue when you submit, and a de
 | Automatic Bilingual Adaptation | Automatically follows message and reply languages, or locks to your preferred English/Chinese voices. |
 | Subagent Silence Isolation | Accurately identifies root user interactions, keeping parallel subagents and tool runs completely silent. |
 | Distinct Persona Voices | Distinguish clients by ear: Codex defaults to female voice, Antigravity and Claude Code default to male voice, fully customizable in `~/.voice-reply/config.json`. |
+| Automated Rules Distribution | One-click sync of unified rules (Voice reply, Git push safety, No hypophora / conclusion-first) to Antigravity, Codex, and Claude Code. |
 
 ## Installation
 
@@ -102,6 +103,8 @@ agent-voice-reply/
 │   ├── manage-hooks.mjs       # Idempotent hook registration across agents
 │   └── doctor.mjs             # Diagnostic tool for environments and playback
 ├── adapters/                  # Experimental adapters for OpenClaw and Hermes
+├── rules/                     # Unified multi-agent collaboration and safety rules template
+│   └── agent-rules.md
 ├── SKILL.md                   # Agent skill specification definition
 ├── setup.sh                   # One-command initialization script
 ├── test.sh                    # Automated regression test suite

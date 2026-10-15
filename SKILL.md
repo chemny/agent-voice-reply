@@ -39,6 +39,8 @@ agent-voice-reply/
   adapters/
     openclaw/           # OpenClaw hook adapter (experimental)
     hermes/             # Hermes shell-hook adapter (experimental)
+  rules/
+    agent-rules.md      # unified rules template (voice reply, git push safety, communication style)
   agents/openai.yaml
   .venv/               # created by setup.sh, gitignored
 ```
@@ -142,6 +144,18 @@ Each agent dynamically reads from `~/.voice-reply/config.json`, checking `agents
   }
 }
 ```
+
+## Collaboration rules distribution
+
+The skill ships with unified collaboration guidelines in `rules/agent-rules.md`:
+- **Voice Reply**: Spoken result markers, ≤60 chars, ear-friendly, decision-first, subagents silent.
+- **Git Push Safety**: Strict confirmation gate before any remote `git push` (branches, commits, tags).
+- **Communication Style**: No hypophora / self-interrogation in user-facing text, conclusion-first.
+
+During `setup.sh`, these rules are idempotently installed or upgraded across client rule files:
+- Antigravity: `~/.gemini/config/GEMINI.md`
+- Codex: `~/.codex/AGENTS.md`
+- Claude Code: `~/.claude/CLAUDE.md`
 
 ## Opening cue
 
