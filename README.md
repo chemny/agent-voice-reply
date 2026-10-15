@@ -2,199 +2,115 @@
 
 English | [中文](./README.zh.md)
 
-**Talk with your agent by voice — stop watching the screen.**
+## Overview
 
-Agent Voice Reply makes your coding agent more than a one-way announcer: it answers the
-moment you speak, and when it finishes a step it tells you the **decision it needs
-from you**. You reply, it continues — a back-and-forth, so your eyes are free but
-you stay in control.
+Agent Voice Reply brings seamless, ambient two-way voice feedback to AI coding agents. It enables Antigravity, Codex, and Claude Code to speak naturally: acknowledging your request the instant you press Enter, and delivering a concise, decision-first spoken summary when execution finishes — freeing your eyes from babysitting terminal or IDE screens.
 
-Native support for **Antigravity**, **Codex**, and **Claude Code**, with experimental adapters for
-**OpenClaw** and **Hermes**, **Chinese and English (pick one at setup,
-locked; or choose auto-per-message)**, with an instant opening cue, a decision-first result reply,
-runtime-specific voices, subagent silence isolation, Agent-directed setup, cross-platform playback (macOS / Linux /
-Windows), and offline cues via local [Edge TTS](https://github.com/rany2/edge-tts).
+## Preview
 
-## Who Is This For?
+![Agent Voice Reply Workflow Overview](./assets/workflow-overview.png)
+Two-way ambient voice interaction: instant opening cue when you submit, and a decision-first spoken summary when the task finishes.
 
-This skill is designed for:
-
-- People who run long tasks in Antigravity / Codex / Claude Code and don't want to babysit the screen
-- People using multiple agent runtimes who want a unified voice-reply experience
-- Anyone who wants an ambient, non-intrusive voice-feedback layer in their agent workflow
-
-## What It Does
-
-Two spoken moments per turn:
-
-- **Opening cue** — the instant you submit, a hook plays a quick acknowledgement
-  matched to your message's **language and type**. It fires *before* the model
-  reads your message, so it only acknowledges — never pretends to answer.
-  Pre-synthesized and cached, so it plays offline in under a second.
-- **Result reply** — when the turn finishes, the model's one-line reply is spoken:
-  a conclusion, **or the decision it needs from you (decision-first)**. You answer
-  and the loop continues — turning a one-way announcement into a back-and-forth. It
-  can carry the real answer (yes/no, a number, "restart to apply"), in a voice matched
-  to the reply's language.
-
-Completion speech is marker-only. The root agent writes one final
-`<!-- voice: ... -->` (or `<<voice: ...>>`) marker to authorize playback. Without a marker or for subagents, the turn stays silent.
-
-## Core Capabilities
+## Features
 
 | Capability | What It Helps You Do |
 |---|---|
-| Instant opening cue | Hear immediately that the agent has received the task and started working. |
-| Final voice reply | Speak only the final `voice` marker, so long answers or intermediate status do not get read aloud. |
-| Decision-first reminder | When the result needs approval, a choice, or a next step, hear that action first. |
-| Chinese + English voice | Use fixed Chinese, fixed English, or automatic language switching per message. |
-| Multi-Agent & Subagent Silence | Antigravity, Codex, and Claude Code unified, keeping sub-agents completely silent. |
+| Instant Opening Cue | Receive immediate spoken confirmation ("On it", "Let me look") with zero delay using pre-cached audio. |
+| Decision-First Spoken Summary | Hear what requires your approval or choice first, transforming one-way notifications into an interactive loop. |
+| Native Multi-Runtime Support | Natively compatible with Antigravity, Codex, and Claude Code under unified configuration. |
+| Automatic Bilingual Adaptation | Automatically follows message and reply languages, or locks to your preferred English/Chinese voices. |
+| Subagent Silence Isolation | Accurately identifies root user interactions, keeping parallel subagents and tool runs completely silent. |
 
-## Platform Compatibility
+## Installation
 
-| Platform | Status | Integration |
-|---|---|---|
-| Antigravity | ✅ Native | `~/.gemini/config/hooks.json` (`PreInvocation` + `Stop`) |
-| Claude Code | ✅ Native | `~/.claude/settings.json` hooks (`UserPromptSubmit` + `Stop`) |
-| Codex | ✅ Native | `~/.codex/hooks.json` (`UserPromptSubmit` + `Stop`) |
-| OpenClaw | 🧪 Experimental | `adapters/openclaw` (`message:received` + `message:sent`) |
-| Hermes | 🧪 Experimental | `adapters/hermes` (`~/.hermes/config.yaml` shell hooks) |
+### Requirements
 
-Windows playback is tested. macOS (`afplay`) and Linux (`ffplay` / `mpv` /
-`mpg123`) are supported by implementation but have not been runtime-tested in
-this release.
+Only basic Node.js and Python runtimes are required before starting. Your installing Agent will help verify and fill gaps.
 
-## Install
+| Item | Requirement |
+|---|---|
+| Agent Client | Antigravity, Codex, or Claude Code (natively verified) |
+| Core Runtime | Node.js ≥ 18, Python ≥ 3.9 |
+| Audio Player | Native `afplay` on macOS; `ffplay`, `mpv`, or `mpg123` on Linux/Windows |
+| TTS Engine | Edge TTS (automatically isolated in dedicated project `.venv`) |
 
-Send this request to your current Agent:
+### Quick Installation
+
+Open your agent client and paste the following request to complete installation and registration:
 
 ```text
-Install this Skill for me:
-https://github.com/chemny/codex-voice-reply
+Install this Skill: https://github.com/chemny/agent-voice-reply
+Check the basic environment and prepare anything missing first, then install and verify it works. Set up optional features when I need them.
 ```
 
-The Agent detects the operating system, installs the dependencies, registers
-the supported hooks, runs the doctor, and verifies playback. Codex may ask you
-to approve the `UserPromptSubmit` and `Stop` hooks once through `/hooks`.
+Upon installation, your agent registers lifecycle hooks and runs `doctor.mjs` to verify end-to-end sound playback.
 
 ## Quick Start
 
-After install + restart, just send a message:
+Send any daily coding task or question in your supported agent client:
 
-- Ask a question → hear *"我看看"* immediately, then the conclusion (e.g. *"对"*).
-- Give an instruction → hear *"好，这就做"*, then *"改好了，记得重启"* when done.
+```text
+Inspect the test suites in the current directory and fix any failing unit tests
+```
 
-The installer finishes with an audible test and a self-check report.
+The client will immediately speak an opening confirmation, perform the requested task, and verbally summarize the outcome when finished.
 
 ## Usage Examples
 
-Result speech comes only from an explicit final marker. Codex uses
-`<<voice: ...>>`; supported adapters may also use the hidden
-`<!-- voice: ... -->` form. No marker means no completion audio.
+### Decision-First Approval
 
-### Multi-agent mode
+```text
+Refactor the authentication module with breaking database migrations
+```
 
-`multiAgentMode: "root-only"` is enabled by default. Only the root agent that
-replies directly to the user may announce the opening and final result. Tasks
-sent to workers are prefixed with `[voice-silent-subagent]`; worker, reviewer,
-and other internal events remain silent, and the root agent speaks once after
-aggregating their results. A 3-second opening debounce also suppresses bursty
-duplicate start cues.
+When finished, the agent verbally speaks: *"Done. Need your confirmation to apply the database migration now."*
 
-Recognized background memory-maintenance prompts are also kept silent by
-default, preventing internal consolidation turns from producing opening cues.
+### Multi-Agent Coordination
 
-Opening and completion deliberately use separate gates. An opening has no voice
-marker and is controlled by agent-scope detection plus debounce. For completion,
-`<<voice: ...>>` is authorization to speak directly to the user; only the root
-agent may issue it after aggregation. Hook-level worker filtering remains a
-safety net if a sub-agent emits a marker by mistake.
+```text
+Launch two subagents in parallel to evaluate Plan A and Plan B performance benchmarks
+```
 
-Opening language and result voice are independent: `lang` locks only the
-opening cue, while `resultLang: "auto"` selects the result voice from marker
-content. `hook.log` records event decisions and `playback.log` records actual
-synthesis/player outcomes. Both rotate at 5 MB with up to three backups.
+All intermediate subagent runs remain completely silent. The root agent speaks the comparison conclusion once aggregated.
 
 ## How It Works
 
-| Moment | Who decides what to say | What you hear |
-|---|---|---|
-| You submit | hook classifies the prompt (`scripts/opening.mjs`, shared) | 我看看 / 好，这就做 / 收到 |
-| Agent finishes | the **model** writes `<!-- voice: … -->` | the real result; silent when missing |
+The project uses lightweight lifecycle hooks to intercept start/finish checkpoints, combining local cache with Edge TTS for instant audio delivery:
 
-The hook scripts only play audio. Playback is fired in the background so hooks
-return in ~200 ms and never block the agent. Spoken text is hard-capped at 60 chars.
+| Component | Path / Configuration | Responsibility |
+|---|---|---|
+| Antigravity Adapter | `scripts/antigravity-hook.mjs` | Listens on `PreInvocation` for opening cues and `Stop` for final voice markers. |
+| Codex Adapter | `scripts/codex-hook.mjs` | Listens on `UserPromptSubmit` and `Stop` for terminal and desktop events. |
+| Claude Code Adapter | `scripts/claude-hook.mjs` | Hooks into session lifecycle to extract final spoken markers. |
+| Core Opening Engine | `scripts/opening.mjs` | Intent classification, language detection, and pre-cached MP3 management. |
+| Playback & Synthesis | `scripts/speak.mjs` | Edge TTS scheduling, concurrency lock, and cross-platform player spawning. |
+| System Diagnostics | `scripts/doctor.mjs` | End-to-end health check for runtime, dependencies, voices, cache, and hooks. |
 
 ## Repository Structure
 
 ```text
-codex-voice-reply/
+agent-voice-reply/
+├── assets/
+│   └── workflow-overview.png  # Workflow and architectural illustration banner
 ├── scripts/
-│   ├── speak.mjs        # core: text → Edge TTS mp3 → cross-platform player
-│   ├── opening.mjs      # shared opening-cue rule (both agents)
-│   ├── claude-hook.mjs  # Claude Code hook entry
-│   ├── codex-hook.mjs   # Codex hook entry
-│   ├── codex-notify.mjs # Codex notify fallback
-│   ├── manage-hooks.mjs # idempotent install/remove hooks (with backup)
-│   ├── manage-notify.mjs# add/remove Codex notify fallback
-│   └── doctor.mjs       # dependency, hook, cache, and playback checks
-├── adapters/
-│   ├── openclaw/        # OpenClaw hook adapter
-│   └── hermes/          # Hermes shell-hook adapter
-├── install.sh / install.ps1 / setup.sh
-├── uninstall.sh / uninstall.ps1 / test.sh
-├── SKILL.md / README.md / README.zh.md / LICENSE / .gitignore
-└── agents/openai.yaml
+│   ├── antigravity-hook.mjs   # Antigravity lifecycle hook adapter
+│   ├── codex-hook.mjs         # Codex lifecycle hook adapter
+│   ├── claude-hook.mjs        # Claude Code lifecycle hook adapter
+│   ├── speak.mjs              # TTS synthesis and cross-platform player runner
+│   ├── opening.mjs            # Opening classifier and multilingual logic
+│   ├── manage-hooks.mjs       # Idempotent hook registration across agents
+│   └── doctor.mjs             # Diagnostic tool for environments and playback
+├── adapters/                  # Experimental adapters for OpenClaw and Hermes
+├── SKILL.md                   # Agent skill specification definition
+├── setup.sh                   # One-command initialization script
+├── test.sh                    # Automated regression test suite
+└── LICENSE                    # Apache 2.0 License
 ```
-
-Runtime data lives in `~/.voice-reply/`: `config.json` (voice/rate/volume),
-`hooks.json` (toggles and fixed texts), `cache/` (opening cues), `hook.log`
-(event decisions), and `playback.log` (synthesis/player outcomes).
-
-## Requirements
-
-- Node 18+
-- Python 3 (runs edge-tts in a local venv)
-- An audio player: `afplay` on macOS, or `ffplay` / `mpv` / `mpg123` on Linux/Windows
-- Network access ([edge-tts](https://github.com/rany2/edge-tts) uses Microsoft's endpoint)
-
-Ships with **Chinese + English** opening phrases and classifiers. During install
-you can choose Chinese, English, or auto per-message switching. More languages
-can be added by extending the packs in `scripts/opening.mjs`.
-
-## No sound?
-
-Run the doctor first — it pinpoints which link in the chain is broken:
-
-```bash
-node scripts/doctor.mjs
-```
-
-Common causes:
-
-- **Didn't restart the agent** — hooks load at session start, so restart Claude Code / Codex after install.
-- **No audio player** (Linux/Windows) — install `ffplay` (ffmpeg), `mpv`, or `mpg123`; macOS ships `afplay`.
-- **Hooks not registered, or the command path got quoted** — rerun the one-command installer; it rewrites the hook in the correct form.
-- **This Codex build has no hooks support** (older / some Windows CLIs) — use the `notify` fallback: `node scripts/manage-notify.mjs add "$(pwd)"`, then restart Codex. It takes over Codex's `notify` (preserving and chaining your existing one) and speaks the voice marker on **completion only — no opening cue**.
-- **edge-tts not installed** — rerun the one-command installer (needs python3 + network).
-
-## Experimental Adapters
-
-OpenClaw and Hermes adapters reuse the same shared rules as Claude Code and
-Codex:
-
-- opening cue: classify the user's prompt and speak a short acknowledgement;
-- result reply: speak only an explicit final voice marker;
-- missing marker: stay silent.
-
-OpenClaw files live in `adapters/openclaw`. Hermes files live in
-`adapters/hermes`; its hook command is configured through `~/.hermes/config.yaml`.
-Both adapters are marked experimental until their event payloads are validated
-across more installs.
-
-The install flow ends by running the doctor and playing a test sound. If you hear
-it, audio works.
 
 ## License
 
-[Apache License 2.0](LICENSE)
+This project is licensed under the Apache 2.0 License. See [LICENSE](./LICENSE) for details.
+
+## About Me
+
+Neo Chen ([@chemny](https://github.com/chemny)) — Passionate about AI Agents, developer productivity tools, and agentic workflows. Feel free to open an issue or pull request on GitHub!
