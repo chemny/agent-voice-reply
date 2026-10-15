@@ -27,7 +27,7 @@ function rotateLog(path) {
   }
 }
 
-// Codex 的音色：中文女声 + 英文女声（config.json 的 voice / voiceEn），按语种自动选用。
+// Codex 的音色：优先读取 agents.codex，默认中文女声 + 英文女声。
 function codexVoices() {
   let cfg = {};
   try {
@@ -35,9 +35,10 @@ function codexVoices() {
   } catch {
     cfg = {};
   }
+  const codexCfg = cfg.agents?.codex || {};
   return {
-    zh: cfg.voice || "zh-CN-XiaoxiaoNeural",
-    en: cfg.voiceEn || "en-US-AriaNeural",
+    zh: codexCfg.voice || "zh-CN-XiaoxiaoNeural",
+    en: codexCfg.voiceEn || "en-US-AriaNeural",
   };
 }
 

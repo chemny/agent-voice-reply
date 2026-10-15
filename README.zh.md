@@ -20,6 +20,7 @@ Agent Voice Reply 是一款专为 AI 编码助手打造的双向语音反馈工�
 | 多客户端原生兼容 | 原生支持 Antigravity、Codex 和 Claude Code，统一配置与音色。 |
 | 自动中英文适配 | 自动识别每条消息与回复的语言，或按配置锁定特定中/英文音色。 |
 | 子 Agent 静音隔离 | 严格识别主交互与子任务，多 Agent 并行或内部工具调用时保持绝对静默。 |
+| 多端专属人设音色 | 耳听即辨别：Codex 默认女声，Antigravity 与 Claude Code 默认男声，支持在 `~/.voice-reply/config.json` 灵活定制。 |
 
 ## 安装
 

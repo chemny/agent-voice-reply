@@ -115,7 +115,33 @@ sentence-selection fallback. Spoken audio is clamped to ≤60 characters.
 
 ## Per-agent voice
 
-Claude Code speaks **male** and Codex speaks **female**, so you can tell them apart by ear. Each has a Chinese and an English voice, picked automatically by the message/reply language: Claude `CLAUDE_VOICE_ZH` / `CLAUDE_VOICE_EN` at the top of `claude-hook.mjs` (default zh-CN-YunxiNeural / en-US-GuyNeural); Codex `voice` / `voiceEn` in `~/.voice-reply/config.json` (default zh-CN-XiaoxiaoNeural / en-US-AriaNeural).
+Voices are distinct across agent clients so you can tell them apart by ear:
+- **Codex**: defaults to female voice (`zh-CN-XiaoxiaoNeural` / `en-US-AriaNeural`).
+- **Antigravity**: defaults to male voice (`zh-CN-YunxiNeural` / `en-US-GuyNeural`).
+- **Claude Code**: defaults to male voice (`zh-CN-YunxiNeural` / `en-US-GuyNeural`).
+
+Each agent dynamically reads from `~/.voice-reply/config.json`, checking `agents.<client>` first before falling back to top-level settings:
+
+```json
+{
+  "voice": "zh-CN-YunxiNeural",
+  "voiceEn": "en-US-GuyNeural",
+  "agents": {
+    "codex": {
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "voiceEn": "en-US-AriaNeural"
+    },
+    "antigravity": {
+      "voice": "zh-CN-YunxiNeural",
+      "voiceEn": "en-US-GuyNeural"
+    },
+    "claude": {
+      "voice": "zh-CN-YunxiNeural",
+      "voiceEn": "en-US-GuyNeural"
+    }
+  }
+}
+```
 
 ## Opening cue
 

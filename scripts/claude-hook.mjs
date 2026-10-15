@@ -22,11 +22,20 @@ function log(event, extra) {
   appendRotatingLog(LOG_PATH, { agent: "claude", event, ...extra });
 }
 
-// Claude Code 专用音色：中文男声 + 英文男声（保持同一"性别人设"，听感一致）。
-// 按消息/回答的语种自动选用。想换声音改这两行即可。
-const CLAUDE_VOICE_ZH = "zh-CN-YunxiNeural";
-const CLAUDE_VOICE_EN = "en-US-GuyNeural";
-const CLAUDE_VOICES = { zh: CLAUDE_VOICE_ZH, en: CLAUDE_VOICE_EN };
+// Claude Code 专用音色：支持从 config.json 的 agents.claude 动态覆盖，默认中文男声 + 英文男声。
+function claudeVoices() {
+  let cfg = {};
+  try {
+    cfg = JSON.parse(readFileSync(join(homedir(), ".voice-reply", "config.json"), "utf8"));
+  } catch {
+    cfg = {};
+  }
+  const claudeCfg = cfg.agents?.claude || {};
+  return {
+    zh: claudeCfg.voice || "zh-CN-YunxiNeural",
+    en: claudeCfg.voiceEn || "en-US-GuyNeural",
+  };
+}
 
 // 回答里"为耳朵写的"播报摘要标记。优先朗读这个显式标记；
 // 抓不到就播短兜底，避免长正文或中途状态被念出来。
@@ -102,7 +111,8 @@ function isUsefulVoiceText(text) {
 
 // 直接朗读标记内容，绕过打分逻辑。音色按标记文字的语种选（中文男声 / 英文男声）。
 function speakDirect(text) {
-  const voice = resolveVoice(CLAUDE_VOICES, detectContentLang(text));
+  const voices = claudeVoices();
+  const voice = resolveVoice(voices, detectContentLang(text));
   playDetached(process.execPath, [speakScript, "text", "--text", text, "--full"], {
     VOICE_REPLY_VOICE: voice,
   });
@@ -114,7 +124,7 @@ function main() {
 
   if (event === "UserPromptSubmit") {
     // 按你发的原文粗判语种 + 类型，播一句即时回应（共用 opening.mjs 规则，后台、缓存）。
-    const cue = playOpening(input, CLAUDE_VOICES);
+    const cue = playOpening(input, claudeVoices());
     log("open", { cue: cue.key, lang: cue.lang });
     return;
   }

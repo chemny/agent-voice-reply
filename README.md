@@ -20,6 +20,7 @@ Two-way ambient voice interaction: instant opening cue when you submit, and a de
 | Native Multi-Runtime Support | Natively compatible with Antigravity, Codex, and Claude Code under unified configuration. |
 | Automatic Bilingual Adaptation | Automatically follows message and reply languages, or locks to your preferred English/Chinese voices. |
 | Subagent Silence Isolation | Accurately identifies root user interactions, keeping parallel subagents and tool runs completely silent. |
+| Distinct Persona Voices | Distinguish clients by ear: Codex defaults to female voice, Antigravity and Claude Code default to male voice, fully customizable in `~/.voice-reply/config.json`. |
 
 ## Installation
 

@@ -49,9 +49,10 @@ function loadVoices() {
   } catch {
     cfg = {};
   }
+  const agyCfg = cfg.agents?.antigravity || {};
   return {
-    zh: cfg.voice || "zh-CN-YunxiNeural",
-    en: cfg.voiceEn || "en-US-GuyNeural",
+    zh: agyCfg.voice || cfg.voice || "zh-CN-YunxiNeural",
+    en: agyCfg.voiceEn || cfg.voiceEn || "en-US-GuyNeural",
   };
 }
 
