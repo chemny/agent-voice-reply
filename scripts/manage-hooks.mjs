@@ -17,8 +17,9 @@ if (mode !== "add" && mode !== "remove") {
 }
 
 const targets = [
-  { name: "Claude Code", file: join(homedir(), ".claude", "settings.json"), script: join(skillRoot, "scripts", "claude-hook.mjs") },
-  { name: "Codex", file: join(homedir(), ".codex", "hooks.json"), script: join(skillRoot, "scripts", "codex-hook.mjs") },
+  { name: "Claude Code", type: "codex-style", file: join(homedir(), ".claude", "settings.json"), script: join(skillRoot, "scripts", "claude-hook.mjs") },
+  { name: "Codex", type: "codex-style", file: join(homedir(), ".codex", "hooks.json"), script: join(skillRoot, "scripts", "codex-hook.mjs") },
+  { name: "Antigravity", type: "antigravity", file: join(homedir(), ".gemini", "config", "hooks.json"), script: join(skillRoot, "scripts", "antigravity-hook.mjs") },
 ];
 const EVENTS = ["UserPromptSubmit", "Stop"];
 
@@ -35,24 +36,46 @@ function load(file) {
 for (const t of targets) {
   const data = load(t.file);
   if (data === null) continue;
-  data.hooks = data.hooks || {};
   let changed = false;
 
-  for (const ev of EVENTS) {
-    const before = JSON.stringify(data.hooks[ev] ?? null);
-    // Always drop any prior voice-reply entry first (self-heals an old/broken format),
-    // then for "add" append a fresh one. Command is UNQUOTED to match what the agents'
-    // hook runners actually execute (a quoted path is taken literally and fails silently).
-    const scriptName = basename(t.script);
-    const list = (Array.isArray(data.hooks[ev]) ? data.hooks[ev] : []).filter(
-      (group) => !JSON.stringify(group).includes(scriptName),
-    );
+  if (t.type === "antigravity") {
+    const before = JSON.stringify(data["voice-reply"] ?? null);
     if (mode === "add") {
-      list.push({ hooks: [{ type: "command", command: `node ${t.script}`, timeout: 60 }] });
+      data["voice-reply"] = {
+        PreInvocation: [
+          {
+            type: "command",
+            command: `node ${t.script} PreInvocation`,
+            timeout: 30,
+          },
+        ],
+        Stop: [
+          {
+            type: "command",
+            command: `node ${t.script} Stop`,
+            timeout: 30,
+          },
+        ],
+      };
+    } else if (mode === "remove") {
+      delete data["voice-reply"];
     }
-    if (list.length) data.hooks[ev] = list;
-    else delete data.hooks[ev];
-    if (JSON.stringify(data.hooks[ev] ?? null) !== before) changed = true;
+    if (JSON.stringify(data["voice-reply"] ?? null) !== before) changed = true;
+  } else {
+    data.hooks = data.hooks || {};
+    for (const ev of EVENTS) {
+      const before = JSON.stringify(data.hooks[ev] ?? null);
+      const scriptName = basename(t.script);
+      const list = (Array.isArray(data.hooks[ev]) ? data.hooks[ev] : []).filter(
+        (group) => !JSON.stringify(group).includes(scriptName),
+      );
+      if (mode === "add") {
+        list.push({ hooks: [{ type: "command", command: `node ${t.script}`, timeout: 60 }] });
+      }
+      if (list.length) data.hooks[ev] = list;
+      else delete data.hooks[ev];
+      if (JSON.stringify(data.hooks[ev] ?? null) !== before) changed = true;
+    }
   }
 
   if (!changed) {

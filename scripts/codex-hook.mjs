@@ -397,6 +397,12 @@ function main() {
     return;
   }
   if (event === "UserPromptSubmit" && config.start) {
+    // Desktop composer predictions also emit prompt hooks, but are not user messages.
+    const prompt = String(promptText(input) || "");
+    if (/^\s*This is an app-generated request for a suggested next user message\.\s+The user did not write this message\.(?:\s|$)/.test(prompt)) {
+      log("open", { source: "composer-prediction-silent" });
+      return;
+    }
     if (config.suppressMaintenance !== false && isInternalMaintenanceText(promptText(input))) {
       log("open", { source: "internal-maintenance-silent" });
       return;

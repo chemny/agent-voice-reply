@@ -18,7 +18,7 @@ export VOICE_REPLY_HOME="$TESTHOME/.voice-reply"
 trap 'rm -rf "$TESTHOME"' EXIT
 
 echo "1. syntax"
-for f in speak opening claude-hook codex-hook codex-notify manage-hooks manage-notify doctor; do
+for f in speak opening antigravity-hook claude-hook codex-hook codex-notify manage-hooks manage-notify doctor; do
   if node --check "$S/$f.mjs" 2>/dev/null; then ok "$f.mjs"; else bad "$f.mjs"; fi
 done
 node --check "$SKILL_DIR/adapters/openclaw/handler.js" >/dev/null 2>&1 && ok "adapters/openclaw/handler.js" || bad "adapters/openclaw/handler.js"
@@ -106,6 +106,20 @@ out=$(printf '%s' '{"hook_event_name":"Stop","session_id":"33333333-3333-3333-33
 echo "$out" | grep -q 'en-US-AriaNeural' && ok "English result uses English voice" || bad "English result uses English voice"
 printf '{}' > "$VOICE_REPLY_HOME/hooks.json"
 
+echo "4h. Codex composer prediction opening stays silent without consuming debounce"
+rm -f "$VOICE_REPLY_HOME/opening-state.json"
+out=$(printf '%s' '{"hook_event_name":"UserPromptSubmit","prompt":"This is an app-generated request for a suggested next user message. The user did not write this message.\n\nPredict the single message this user is most likely to type next."}' \
+  | VOICE_REPLY_DRY_RUN=1 node "$S/codex-hook.mjs" 2>/dev/null)
+[ -z "$out" ] && ok "composer prediction opening silent" || bad "composer prediction opening silent"
+[ ! -e "$VOICE_REPLY_HOME/opening-state.json" ] && ok "composer prediction does not consume debounce" || bad "composer prediction does not consume debounce"
+for prompt in '这样对吗' '帮我改一下' '我跟你说个事' 'is this right?' 'fix this bug' 'just an FYI' 'Explain this phrase: This is an app-generated request for a suggested next user message. The user did not write this message.' 'This is an app-generated request for a suggested next user message. What does that mean?'; do
+  rm -f "$VOICE_REPLY_HOME/opening-state.json"
+  out=$(node -e 'process.stdout.write(JSON.stringify({hook_event_name:"UserPromptSubmit",prompt:process.argv[1]}))' "$prompt" \
+    | VOICE_REPLY_DRY_RUN=1 node "$S/codex-hook.mjs" 2>/dev/null)
+  echo "$out" | grep -q '"opening"' && ok "normal opening: $prompt" || bad "normal opening: $prompt"
+done
+rm -f "$VOICE_REPLY_HOME/opening-state.json"
+
 echo "5. shared opening rule + language detection (opening.mjs)"
 # prints "<lang> <key>" for a prompt
 oc() { node --input-type=module -e "import {pathToFileURL} from 'node:url'; const m=await import(pathToFileURL(process.argv[1])); const l=m.detectLang(process.argv[2]); console.log(l, m.openingCue(process.argv[2], l).key)" "$S/opening.mjs" "$1"; }
@@ -163,7 +177,23 @@ out=$(printf '%s' '{"hook_event_name":"SubagentStop","transcript_path":"/tmp/non
   | VOICE_REPLY_DRY_RUN=1 node "$S/claude-hook.mjs" 2>/dev/null)
 echo "$out" | grep -q 'announceArgs' && bad "claude sub-agent silent" || ok "claude sub-agent silent"
 voice=$(node --input-type=module -e "import {pathToFileURL} from 'node:url'; const m=await import(pathToFileURL(process.argv[1])); console.log(m.detectContentLang('English result ready.'));" "$S/opening.mjs")
-[ "$voice" = "en" ] && ok "claude shared English detection" || bad "claude shared English detection"
+echo "12. Antigravity hook integration"
+AG_TMP=$(mktemp)
+printf '{"type":"USER_INPUT","content":"<USER_REQUEST>\\n帮我写一个测试脚本\\n</USER_REQUEST>"}\n{"type":"PLANNER_RESPONSE","content":"处理中..."}\n' > "$AG_TMP"
+out=$(printf '{"invocationNum":0,"transcriptPath":"%s"}' "$AG_TMP" | VOICE_REPLY_DRY_RUN=1 node "$S/antigravity-hook.mjs" PreInvocation 2>/dev/null)
+echo "$out" | grep -q '^{}$' && ok "antigravity PreInvocation returns valid JSON" || bad "antigravity PreInvocation returns valid JSON"
+
+out=$(printf '{"invocationNum":1,"transcriptPath":"%s"}' "$AG_TMP" | VOICE_REPLY_DRY_RUN=1 node "$S/antigravity-hook.mjs" PreInvocation 2>/dev/null)
+echo "$out" | grep -q '^{}$' && ok "antigravity sub-invocation stays silent and returns JSON" || bad "antigravity sub-invocation stays silent and returns JSON"
+
+printf '{"type":"USER_INPUT","content":"[voice-silent-subagent] 内部子任务"}\n{"type":"PLANNER_RESPONSE","content":"子任务结果 <!-- voice: 子任务播报 -->"}\n' > "$AG_TMP"
+out=$(printf '{"transcriptPath":"%s"}' "$AG_TMP" | VOICE_REPLY_DRY_RUN=1 node "$S/antigravity-hook.mjs" Stop 2>/dev/null)
+echo "$out" | grep -q '^{}$' && ok "antigravity subagent Stop stays silent" || bad "antigravity subagent Stop stays silent"
+
+printf '{"type":"USER_INPUT","content":"<USER_REQUEST>\\n你好\\n</USER_REQUEST>"}\n{"type":"PLANNER_RESPONSE","content":"最终回复\\n<!-- voice: 任务已完成，播放正常。 -->"}\n' > "$AG_TMP"
+out=$(printf '{"transcriptPath":"%s"}' "$AG_TMP" | VOICE_REPLY_DRY_RUN=1 node "$S/antigravity-hook.mjs" Stop 2>/dev/null)
+echo "$out" | grep -q '^{}$' && ok "antigravity Stop returns valid JSON" || bad "antigravity Stop returns valid JSON"
+rm -f "$AG_TMP"
 
 echo
 [ "$fail" = "0" ] && echo "ALL PASS" || echo "SOME FAILED"

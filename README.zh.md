@@ -1,31 +1,30 @@
-# Codex Voice Reply
+# Agent Voice Reply
 
 [English](./README.md) | 中文
 
 **和你的 AI 用语音双向沟通——不用再盯着屏幕等。**
 
-Codex Voice Reply 让编码 Agent 不只是"干完报一句结论"：你一发话它立刻应声；它干完一件事，会把**这一步需要你拍板的选择**说给你听；你回一句，它接着往下做。一来一回，像在对话——眼睛解放了，方向盘还在你手里。
+Agent Voice Reply 让编码 Agent 不只是"干完报一句结论"：你一发话它立刻应声；它干完一件事，会把**这一步需要你拍板的选择**说给你听；你回一句，它接着往下做。一来一回，像在对话——眼睛解放了，方向盘还在你手里。
 
-支持 **Claude Code 和 Codex**，并提供 **OpenClaw / Hermes 实验性适配**；支持**中英文（安装时选定并锁定，也可选按消息自动切换）**、即时开场提示、决策优先的结果播报、不同运行时音色；由 Agent 负责安装、跨平台播放、离线秒回。
+原生支持 **Antigravity、Codex 和 Claude Code**，并提供 **OpenClaw / Hermes 实验性适配**；支持**中英文（安装时选定并锁定，也可选按消息自动切换）**、即时开场提示、决策优先的结果播报、子 Agent 严格静音隔离；由 Agent 负责安装、跨平台播放、离线秒回。
 
 ## 适合谁使用？
 
 这个 skill 适合：
 
-- 经常让 Claude Code / Codex 跑长任务、不想干等屏幕的人
-- 同时使用 Claude Code 和 Codex、希望用不同音色区分运行时的人
-- 想给自己的 Agent 工作流加一层语音反馈的人
+- 经常让 Antigravity / Codex / Claude Code 跑长任务、不想干等屏幕的人
+- 同时使用多个 Agent 客户端、希望统一语音播报体验的人
+- 想给自己的 Agent 工作流加一层无感知语音反馈的人
 
 ## 它能做什么？
 
-每一轮对话，Codex Voice Reply 在两个时刻发声：
+每一轮对话，Agent Voice Reply 在两个时刻发声：
 
 - **开场提示**：你一提交，hook 立刻按你这句话的**语种和类型**播一句即时回应——中文「我看看 / 好，这就做 / 收到」，英文 "Let me look / On it / Got it"。它在模型读懂你的话之前触发，所以只确认收到、不假装回答。固定词预先合成成 mp3 缓存，离线、不到 1 秒就出声。
 - **结果播报**：这一轮结束时，把模型写的一句话念出来——可能是结论，**也可能是这一步要你拍板的选择（决策优先）**。你听到就能直接回、接着往下推，把"单向播报"变成"双向对话"。可带真答案（对/错、一个数字、"改好了，记得重启"），并按回答语种自动选中/英文音色。
 
 结束播报只认显式语音标签。主 Agent 在最终回复中生成一个
-`<<voice: ...>>` 标签（部分运行时也支持隐藏的 `<!-- voice: ... -->` 形式）
-才会授权播放；没有标签就保持静默。
+`<!-- voice: ... -->`（或 `<<voice: ...>>`）标签才会授权播放；没有标签或子 Agent 自动保持静默。
 
 ## 核心能力
 
@@ -35,19 +34,17 @@ Codex Voice Reply 让编码 Agent 不只是"干完报一句结论"：你一发�
 | 结果语音播报 | Agent 完成后只朗读最终 `voice` 标记，避免把长正文或过程状态念出来。 |
 | 决策优先提醒 | 如果结果需要你确认、选择或继续拍板，会优先把下一步说清楚。 |
 | 中英文语音 | 支持固定中文、固定英文，或根据每条消息自动切换语言。 |
-| 运行时声音区分 | Claude Code 和 Codex 使用不同音色，内部子 Agent 则保持静默。 |
+| 多端统一 & 子 Agent 静音 | Antigravity、Codex 和 Claude Code 统一支持，内部子 Agent 严格保持静默。 |
 
 ## 平台兼容性
 
-| 平台 | 状态 |
-|---|---|
-| Claude Code | ✅ 已支持（`~/.claude/settings.json` hooks） |
-| Codex | ✅ 已支持（`~/.codex/hooks.json`） |
-| OpenClaw | 🧪 实验性支持（`adapters/openclaw`） |
-| Hermes | 🧪 实验性支持（`adapters/hermes`，`~/.hermes/config.yaml` shell hooks） |
-
-Windows 播放已经实测。macOS（`afplay`）和 Linux（`ffplay`/`mpv`/`mpg123`）
-已完成实现支持，但本版本尚未进行真实运行测试。
+| 平台 | 状态 | 接入机制 |
+|---|---|---|
+| Antigravity | ✅ 已原生支持 | `~/.gemini/config/hooks.json` (`PreInvocation` + `Stop`) |
+| Claude Code | ✅ 已原生支持 | `~/.claude/settings.json` hooks (`UserPromptSubmit` + `Stop`) |
+| Codex | ✅ 已原生支持 | `~/.codex/hooks.json` (`UserPromptSubmit` + `Stop`) |
+| OpenClaw | 🧪 实验性支持 | `adapters/openclaw` (`message:received` + `message:sent`) |
+| Hermes | 🧪 实验性支持 | `adapters/hermes` (`~/.hermes/config.yaml` shell hooks) |
 
 ## 安装
 

@@ -1,27 +1,27 @@
-# Codex Voice Reply
+# Agent Voice Reply
 
 English | [中文](./README.zh.md)
 
 **Talk with your agent by voice — stop watching the screen.**
 
-Codex Voice Reply makes your coding agent more than a one-way announcer: it answers the
+Agent Voice Reply makes your coding agent more than a one-way announcer: it answers the
 moment you speak, and when it finishes a step it tells you the **decision it needs
 from you**. You reply, it continues — a back-and-forth, so your eyes are free but
 you stay in control.
 
-Works with **Claude Code** and **Codex**, with experimental adapters for
+Native support for **Antigravity**, **Codex**, and **Claude Code**, with experimental adapters for
 **OpenClaw** and **Hermes**, **Chinese and English (pick one at setup,
 locked; or choose auto-per-message)**, with an instant opening cue, a decision-first result reply,
-runtime-specific voices, Agent-directed setup, cross-platform playback (macOS / Linux /
+runtime-specific voices, subagent silence isolation, Agent-directed setup, cross-platform playback (macOS / Linux /
 Windows), and offline cues via local [Edge TTS](https://github.com/rany2/edge-tts).
 
 ## Who Is This For?
 
 This skill is designed for:
 
-- People who run long tasks in Claude Code / Codex and don't want to babysit the screen
-- People using Claude Code and Codex who want a distinct voice for each runtime
-- Anyone who wants a voice-feedback layer in their agent workflow
+- People who run long tasks in Antigravity / Codex / Claude Code and don't want to babysit the screen
+- People using multiple agent runtimes who want a unified voice-reply experience
+- Anyone who wants an ambient, non-intrusive voice-feedback layer in their agent workflow
 
 ## What It Does
 
@@ -38,8 +38,7 @@ Two spoken moments per turn:
   to the reply's language.
 
 Completion speech is marker-only. The root agent writes one final
-`<<voice: ...>>` marker (or the hidden `<!-- voice: ... -->` form on supported
-runtimes) to authorize playback. Without a marker, the turn stays silent.
+`<!-- voice: ... -->` (or `<<voice: ...>>`) marker to authorize playback. Without a marker or for subagents, the turn stays silent.
 
 ## Core Capabilities
 
@@ -49,16 +48,17 @@ runtimes) to authorize playback. Without a marker, the turn stays silent.
 | Final voice reply | Speak only the final `voice` marker, so long answers or intermediate status do not get read aloud. |
 | Decision-first reminder | When the result needs approval, a choice, or a next step, hear that action first. |
 | Chinese + English voice | Use fixed Chinese, fixed English, or automatic language switching per message. |
-| Runtime voice identity | Give Claude Code and Codex different voices while keeping their internal sub-agents silent. |
+| Multi-Agent & Subagent Silence | Antigravity, Codex, and Claude Code unified, keeping sub-agents completely silent. |
 
 ## Platform Compatibility
 
-| Platform | Status |
-|---|---|
-| Claude Code | ✅ Supported (`~/.claude/settings.json` hooks) |
-| Codex | ✅ Supported (`~/.codex/hooks.json`) |
-| OpenClaw | 🧪 Experimental (`adapters/openclaw`) |
-| Hermes | 🧪 Experimental (`adapters/hermes`, `~/.hermes/config.yaml` shell hooks) |
+| Platform | Status | Integration |
+|---|---|---|
+| Antigravity | ✅ Native | `~/.gemini/config/hooks.json` (`PreInvocation` + `Stop`) |
+| Claude Code | ✅ Native | `~/.claude/settings.json` hooks (`UserPromptSubmit` + `Stop`) |
+| Codex | ✅ Native | `~/.codex/hooks.json` (`UserPromptSubmit` + `Stop`) |
+| OpenClaw | 🧪 Experimental | `adapters/openclaw` (`message:received` + `message:sent`) |
+| Hermes | 🧪 Experimental | `adapters/hermes` (`~/.hermes/config.yaml` shell hooks) |
 
 Windows playback is tested. macOS (`afplay`) and Linux (`ffplay` / `mpv` /
 `mpg123`) are supported by implementation but have not been runtime-tested in

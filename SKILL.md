@@ -1,25 +1,25 @@
 ---
-name: codex-voice-reply
-description: "Speak a short, context-aware voice reply for agent work — an instant acknowledgement when the user submits, and a decision-first spoken result when the turn finishes (it leads with the choice the user must make, turning a one-way announcement into a back-and-forth). Chinese + English: you pick a language at setup and it locks (or choose auto, which follows each message). Works for Claude Code and Codex via hooks, with experimental OpenClaw and Hermes adapters, using local Edge TTS playback. Use when adding spoken acknowledgements/announcements, reading a result aloud, or wiring voice notifications into an agent workflow."
+name: agent-voice-reply
+description: "Speak a short, context-aware voice reply for agent work — an instant acknowledgement when the user submits, and a decision-first spoken result when the turn finishes (it leads with the choice the user must make, turning a one-way announcement into a back-and-forth). Chinese + English: auto-detects or locks per config. Works universally across Antigravity, Codex, and Claude Code via lifecycle hooks, with experimental OpenClaw and Hermes adapters, using local Edge TTS playback. Use when adding spoken acknowledgements/announcements, reading a result aloud, or wiring voice notifications into an agent workflow."
 metadata:
-  version: "1.1.0"
+  version: "1.2.0"
 ---
 
-# Codex Voice Reply
+# Agent Voice Reply
 
 ## Overview
 
-Codex Voice Reply gives a coding agent a short spoken voice:
+Agent Voice Reply gives coding agents (Antigravity, Codex, Claude Code) a short spoken voice:
 
 - **Opening cue** — the instant the user submits, a hook plays a quick acknowledgement matched to the message's language and type (zh: 我看看 / 好，这就做 / 收到; en: Let me look / On it / Got it). It fires before the model has read the message, so it can only acknowledge, never answer.
 - **Result reply** — when the turn finishes, the model's own one-line summary is spoken: a conclusion, or **the decision the user must make (decision-first)** so they can answer and keep the loop going. It can contain the actual answer (对/错, a fact, "改好了，记得重启"), in a voice matched to the reply's language.
 
-Playback is local Edge TTS + `afplay`, fired in the background so hooks return in ~200ms and never block the agent.
+Playback is local Edge TTS + `afplay`, fired in the background so hooks return in ~50-200ms and never block the agent.
 
 ## Layout
 
 ```
-codex-voice-reply/
+agent-voice-reply/
   SKILL.md
   install.sh           # one-command bootstrap installer
   setup.sh             # one-command install (venv, cache, hooks)
@@ -29,10 +29,11 @@ codex-voice-reply/
   scripts/
     speak.mjs          # core: text → Edge TTS mp3 → cross-platform player
     opening.mjs        # shared opening-cue rule (classifier + cached playback)
-    claude-hook.mjs    # Claude Code hook entry (opening + result marker only)
-    codex-hook.mjs     # Codex hook entry (opening + result marker only)
+    antigravity-hook.mjs # Antigravity hook entry (PreInvocation + Stop)
+    claude-hook.mjs    # Claude Code hook entry (UserPromptSubmit + Stop)
+    codex-hook.mjs     # Codex hook entry (UserPromptSubmit + Stop)
     codex-notify.mjs   # Codex `notify` fallback for builds without hooks (completion-only)
-    manage-hooks.mjs   # register/remove hooks in settings.json / hooks.json
+    manage-hooks.mjs   # register/remove hooks in Antigravity / Claude Code / Codex
     manage-notify.mjs  # wire/unwire the Codex notify fallback in config.toml
     doctor.mjs         # self-check: node/edge-tts/player/config/cache/hooks
   adapters/
@@ -72,7 +73,9 @@ node "$SKILL/scripts/speak.mjs" play --file <file.mp3>   # play an existing clip
 
 **Current Codex policy:** opening and completion use two separate gates.
 `UserPromptSubmit` controls the opening cue through root/sub-agent detection plus
-a short debounce; no voice marker exists yet at that point. Completion playback
+a short debounce; no voice marker exists yet at that point. Codex Desktop's
+app-generated composer predictions are silenced before the opening debounce,
+using their explicit non-user-request preamble. Completion playback
 is marker-only: `<<voice: one-sentence result and next action>>` is an explicit
 authorization to speak directly to the user, not a generic completion summary.
 Only the root agent may issue it after aggregating required worker results.
@@ -86,6 +89,8 @@ those prompt and Stop events silent, while a short opening debounce suppresses
 bursty duplicate starts. The root agent aggregates all worker results and speaks
 once. If future Codex hook payloads expose parent/role metadata, the same filter
 uses those fields automatically.
+
+**Antigravity** — `~/.gemini/config/hooks.json` registers `antigravity-hook.mjs` on `PreInvocation` (opening cue) and `Stop` (result reply). On PreInvocation it inspects `transcriptPath` for the latest direct user request (`<USER_REQUEST>`) at `invocationNum === 0` and plays an immediate cue, while cleanly suppressing subagents. On Stop it extracts the hidden `<!-- voice: ... -->` marker from the final response and speaks it via Edge TTS.
 
 **Claude Code** — `~/.claude/settings.json` registers `claude-hook.mjs` on `UserPromptSubmit` (opening cue) and `Stop` (result reply). On Stop it reads the transcript, extracts the last hidden `<!-- voice: ... -->` marker the model wrote, and speaks it. If absent, it stays silent. Legacy `<<voice: ...>>` markers remain supported.
 

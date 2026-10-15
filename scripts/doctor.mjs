@@ -33,7 +33,7 @@ function readJson(path) {
   catch (error) { return { value: null, error: String(error?.message || error) }; }
 }
 
-console.log("Codex Voice Reply doctor\n");
+console.log("Agent Voice Reply doctor\n");
 
 console.log("Runtime");
 Number(process.versions.node.split(".")[0]) >= 18
@@ -102,11 +102,11 @@ else {
 }
 
 console.log("\nAgent voice rule");
-for (const [label, file] of [["Codex", join(HOME, ".codex", "AGENTS.md")], ["Claude Code", join(HOME, ".claude", "CLAUDE.md")]]) {
+for (const [label, file] of [["Codex", join(HOME, ".codex", "AGENTS.md")], ["Claude Code", join(HOME, ".claude", "CLAUDE.md")], ["Antigravity", join(HOME, ".gemini", "config", "GEMINI.md")]]) {
   if (!existsSync(file)) { WARN(`${label}: instruction file missing`, "rerun setup and install the root-only marker rule"); continue; }
   const text = readFileSync(file, "utf8");
-  const rootOnly = /voice-reply result marker v2|Only the root agent|只有[^\n]*主 Agent/.test(text);
-  const childSilent = /voice-silent-subagent/.test(text);
+  const rootOnly = /voice-reply result marker v2|Only the root agent|只有[^\n]*主 Agent|语音播报（voice-reply）/.test(text);
+  const childSilent = /voice-silent-subagent|中途过程说明|禁止输出语音标记/.test(text);
   rootOnly && childSilent ? PASS(`${label}: root-only voice rule found`) : WARN(`${label}: voice rule is missing or outdated`, "rerun setup and upgrade the marker rule");
 }
 
@@ -128,6 +128,7 @@ function checkHooks(label, file, scriptName) {
 checkHooks("Claude Code", join(HOME, ".claude", "settings.json"), "claude-hook.mjs");
 const codexHooksFile = join(HOME, ".codex", "hooks.json");
 const codexRegistered = checkHooks("Codex", codexHooksFile, "codex-hook.mjs");
+checkHooks("Antigravity", join(HOME, ".gemini", "config", "hooks.json"), "antigravity-hook.mjs");
 
 // Optional Codex notify fallback (for builds without hooks) — only reported if wired.
 const codexToml = join(HOME, ".codex", "config.toml");
