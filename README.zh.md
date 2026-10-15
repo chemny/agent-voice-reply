@@ -8,7 +8,7 @@ Agent Voice Reply 是一款专为 AI 编码助手打造的双向语音反馈工�
 
 ## 效果预览
 
-![Agent Voice Reply 工作流与核心交互示意图](./assets/workflow-overview.gif)
+![Agent Voice Reply 工作流与核心交互示意图](./assets/workflow-overview.png)
 双向语音交互：发送任务时即时应声，任务完成时决策优先语音播报。
 
 ## 核心功能
@@ -91,7 +91,7 @@ Agent Voice Reply 是一款专为 AI 编码助手打造的双向语音反馈工�
 ```text
 agent-voice-reply/
 ├── assets/
-│   └── workflow-overview.gif  # 产品交互与工作流动效示意图
+│   └── workflow-overview.png  # 产品交互与架构示意图
 ├── scripts/
 │   ├── antigravity-hook.mjs   # Antigravity 生命周期钩子适配器
 │   ├── codex-hook.mjs         # Codex 生命周期钩子适配器
